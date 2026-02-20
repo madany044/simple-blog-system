@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Blog</title>
+  <style>
+    body { font-family: Arial; max-width: 800px; margin: auto; }
+    input, textarea, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
+    .post { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    .comment { margin-left: 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<h2>Signup</h2>
+<input id="signupName" placeholder="Name">
+<input id="signupEmail" placeholder="Email">
+<input id="signupPassword" type="password" placeholder="Password">
+<button onclick="signup()">Signup</button>
+
+<h2>Login</h2>
+<input id="loginEmail" placeholder="Email">
+<input id="loginPassword" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<h2>Create Post</h2>
+<input id="postTitle" placeholder="Title">
+<textarea id="postContent" placeholder="Content"></textarea>
+<button onclick="createPost()">Create Post</button>
+
+<h2>All Posts</h2>
+<div id="posts"></div>
+
+<script>
+const API = "http://localhost:5000";
+
+async function signup() {
+  const name = signupName.value;
+  const email = signupEmail.value;
+  const password = signupPassword.value;
+
+  const res = await fetch(`${API}/api/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+}
+
+async function login() {
+  const email = loginEmail.value;
+  const password = loginPassword.value;
+
+  const res = await fetch(`${API}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    alert("Login successful");
+  } else {
+    alert(data.message);
+  }
+}
+
+async function createPost() {
+  const title = postTitle.value;
+  const content = postContent.value;
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API}/api/posts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ title, content })
+  });
+
+  const data = await res.json();
+  alert("Post created");
+  loadPosts();
+}
+
+async function loadPosts() {
+  const res = await fetch(`${API}/api/posts`);
+  const posts = await res.json();
+
+  const container = document.getElementById("posts");
+  container.innerHTML = "";
+
+  const grouped = {};
+
+  posts.forEach(row => {
+    if (!grouped[row.post_id]) {
+      grouped[row.post_id] = {
+        title: row.title,
+        content: row.content,
+        author: row.author_name,
+        comments: []
+      };
+    }
+
+    if (row.comment_id) {
+      grouped[row.post_id].comments.push({
+        content: row.comment_content,
+        author: row.comment_author
+      });
+    }
+  });
+
+  for (let id in grouped) {
+    const post = grouped[id];
+
+    const div = document.createElement("div");
+    div.className = "post";
+
+    div.innerHTML = `
+      <h3>${post.title}</h3>
+      <p>${post.content}</p>
+      <small>By ${post.author}</small>
+      <div>
+        <input placeholder="Add comment" id="comment-${id}">
+        <button onclick="addComment(${id})">Comment</button>
+      </div>
+    `;
+
+    post.comments.forEach(c => {
+      const cdiv = document.createElement("div");
+      cdiv.className = "comment";
+      cdiv.innerHTML = `<p>${c.content} - <b>${c.author}</b></p>`;
+      div.appendChild(cdiv);
+    });
+
+    container.appendChild(div);
+  }
+}
+
+async function addComment(postId) {
+  const content = document.getElementById(`comment-${postId}`).value;
+  const token = localStorage.getItem("token");
+
+  await fetch(`${API}/api/posts/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ content })
+  });
+
+  loadPosts();
+}
+
+loadPosts();
+</script>
+
+</body>
+</html>

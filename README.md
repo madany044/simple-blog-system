@@ -47,47 +47,9 @@ Backend:
 Frontend:
 - HTML
 - CSS
-- Vanilla JavaScript (Fetch API)
+- JavaScript 
 
 ---
-
-## 🗄️ Database Schema
-
-### Users Table
-
-```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Posts Table
-
-```sql
-CREATE TABLE posts (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Comments Table
-
-```sql
-CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
 
 ---
 
@@ -115,27 +77,6 @@ Authorization: Bearer <token>
 5. Middleware verifies token before allowing access
 
 ---
-
-## 📂 Project Structure
-
-```
-blog-backend/
-│
-├── routes/
-│   ├── auth.js
-│   └── posts.js
-│
-├── middleware/
-│   └── authMiddleware.js
-│
-├── db.js
-├── index.js
-├── package.json
-├── .env
-│
-blog-frontend/
-└── index.html
-```
 
 ---
 
@@ -202,28 +143,6 @@ in browser.
 - Kept frontend minimal to focus on backend architecture
 - Used JOIN queries to fetch relational data
 - Avoided overengineering for simplicity and maintainability
-
----
-
-## 🛡️ Validations Implemented
-
-- Required field validation
-- Unique email constraint
-- Password hashing
-- Token validation
-- Post existence check before adding comments
-
----
-
-## 📈 Possible Improvements
-
-- Pagination for posts
-- Structured nested JSON response
-- Update/Delete post endpoints
-- Role-based access control
-- Input validation middleware
-- Deployment (Render / Railway / AWS)
-- Swagger API documentation
 
 ---
 
